@@ -1,10 +1,3 @@
- 當然，我理解您需要完整的程式碼。我會提供一個包含所有更新和修改的完整版本，包括使用者追蹤功能和適當的錯誤處理。
-
-
-
-以下是完整的程式碼：
-
-```jsp
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.PreparedStatement" %>
@@ -208,7 +201,6 @@
 
             <!-- Debug Information -->
             <div style="background-color: #ffeeee; padding: 10px; margin-bottom: 10px;">
-                <h3>調試信息</h3>
                 <p>用戶IP: <%= userIP %></p>
                 <p>用戶名: <%= userName %></p>
                 <p>報告名稱: <%= reportName %></p>
@@ -322,7 +314,46 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
 
-```
 
 
-這個完整的程式碼包含了以下主要特點
+
+
+
+
+
+
+
+
+<?php
+$dsn = 'sqlsrv:server=192.168.8.44;Database=WebPlatform';
+$user = 'jackle';
+$password = 'Jackle844';
+
+$conn = new PDO($dsn, $user, $password);
+$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+function JSON($data, $code = 200) {
+    http_response_code($code);
+    header('Access-Control-Allow-Origin: *');
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data,JSON_UNESCAPED_UNICODE);
+    die();
+}
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
