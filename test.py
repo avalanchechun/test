@@ -1,8 +1,3 @@
- 當然，我理解您需要完整的程式碼。我會提供一個修正了變數衝突問題，並包含所有原始功能和使用者追蹤功能的完整版本。
-
-
-
-```jsp
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.PreparedStatement" %>
@@ -79,8 +74,8 @@
 
     // 新增資料庫連接資訊
     String dbUrl = "jdbc:sqlserver://192.168.8.44;databaseName=WebPlatForm;encrypt=true;trustServerCertificate=true;";
-    String dbUser = "your_username";
-    String dbPassword = "your_password";
+    String dbUser = "paulchun_huang";
+    String dbPassword = "Aa123456";
 
     // 插入資料到 WebPlatForm_Counter 表格
     String insertSQL = "INSERT INTO WebPlatForm.dbo.WebPlatForm_Counter ([IP], [USER], [REPORT], [CLICK_TIME]) VALUES (?, ?, ?, ?)";
@@ -277,22 +272,6 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
 
-```
 
-
-這個完整的程式碼包含了以下主要更新：
-
-1. 修改了變數名稱，將 `out` 改為 `logWriter`，以避免與 JSP 的內置 `out` 對象衝突。
-2. 使用 `application.getRealPath("/")` 來獲取應用程序的根目錄，確保日誌文件被寫入到正確的位置。
-3. 保留了原有的所有功能，包括工單查詢和數據顯示。
-4. 包含了新增的使用者追蹤功能，連接到 192.168.8.44 上的 WebPlatForm 資料庫。
-5. 保留了錯誤處理和日誌記錄功能。
-
-使用這個程式碼時，請注意以下幾點：
-
-1. 請將 `your_username` 和 `your_password` 替換為實際的資料庫用戶名和密碼。
-2. 確保伺服器上已安裝 Microsoft SQL Server JDBC 驅動程式。
-3. 如果遇到 SSL/TLS 相關的問題，可能需要調整連接字串中的 `encrypt` 和 `trustServerCertificate` 參數。
-4. 確保應用程式有權限寫入日誌文件到應用程序的根目錄。
-
-如果您在運行這段程式碼時仍然遇到任何問題，請查看生成的錯誤日誌文件（error_log.txt）中的詳細錯誤訊息。這將有助於進一步診斷和解決問題。如果需要任何額外的幫助或有任何問題，請隨時告訴我。
+還是出現問題，error如下
+type Exception report message description The server encountered an internal error () that prevented it from fulfilling this request. exception org.apache.jasper.JasperException: Unable to compile class for JSP An error occurred at line: 9 in the jsp file: /LogSummary.jsp Generated servlet error: D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java:259: error: cannot find symbol try (PrintWriter logWriter = new PrintWriter(new FileWriter(application.getRealPath("/") + "error_log.txt", true))) { ^ symbol:   variable application location: class LogSummary_jsp An error occurred at line: 9 in the jsp file: /LogSummary.jsp Generated servlet error: Note: D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java uses unchecked or unsafe operations. An error occurred at line: 9 in the jsp file: /LogSummary.jsp Generated servlet error: Note: Recompile with -Xlint:unchecked for details. 1 error org.apache.jasper.compiler.DefaultErrorHandler.javacError(DefaultErrorHandler.java:84) org.apache.jasper.compiler.ErrorDispatcher.javacError(ErrorDispatcher.java:332) org.apache.jasper.compiler.Compiler.generateClass(Compiler.java:412) org.apache.jasper.compiler.Compiler.compile(Compiler.java:472) org.apache.jasper.compiler.Compiler.compile(Compiler.java:451) org.apache.jasper.compiler.Compiler.compile(Compiler.java:439) org.apache.jasper.JspCompilationContext.compile(JspCompilationContext.java:511) org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:295) org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:292) org.apache.jasper.servlet.JspServlet.service(JspServlet.java:236) javax.servlet.http.HttpServlet.service(HttpServlet.java:802) note The full stack trace of the root cause is available in the Apache Tomcat/5.0.28 logs.
