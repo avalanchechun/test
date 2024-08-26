@@ -1,4 +1,4 @@
- 當然，我理解您需要完整的程式碼。我會提供一個修正了之前問題的完整版本，並考慮到您使用的是較舊的 Tomcat 版本。
+ 當然，我理解您需要完整的程式碼。我會提供一個包含所有原有功能、使用者追蹤功能，以及新增的調試信息的完整版本。
 
 
 
@@ -11,6 +11,7 @@
 <%@ page import="java.sql.Connection" %>
 <%@ page import="java.io.FileWriter" %>
 <%@ page import="java.io.PrintWriter" %>
+<%@ page import="java.io.StringWriter" %>
 <%!
     public static String WS_ID_FIX( String wsid, String product ) {
         String ret=wsid;
@@ -62,7 +63,9 @@
             logWriter = new PrintWriter(new FileWriter(logPath, true));
             logWriter.println(new Timestamp(System.currentTimeMillis()) + ": " + message);
             if (e != null) {
-                e.printStackTrace(logWriter);
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                logWriter.println(sw.toString());
             }
         } catch (Exception logEx) {
             System.err.println("無法寫入錯誤日誌: " + logEx.getMessage());
@@ -72,9 +75,24 @@
             }
         }
     }
+
+    private void logInfo(String message, String logPath) {
+        PrintWriter logWriter = null;
+        try {
+            logWriter = new PrintWriter(new FileWriter(logPath, true));
+            logWriter.println(new Timestamp(System.currentTimeMillis()) + ": " + message);
+        } catch (Exception logEx) {
+            System.err.println("無法寫入信息日誌: " + logEx.getMessage());
+        } finally {
+            if (logWriter != null) {
+                logWriter.close();
+            }
+        }
+    }
 %>
 <%
-    String logPath = application.getRealPath("/") + "error_log.txt";
+    String logPath = application.getRealPath("/") + "debug_log.txt";
+    logInfo("開始處理請求", logPath);
     
     // 記錄使用者資訊
     String userIP = request.getRemoteAddr();
@@ -84,6 +102,8 @@
     }
     String reportName = "LogSummary";
     Timestamp clickTime = new Timestamp(System.currentTimeMillis());
+
+    logInfo("使用者資訊: IP=" + userIP + ", 用戶名=" + userName + ", 報告=" + reportName, logPath);
 
     // 新增資料庫連接資訊
     String dbUrl = "jdbc:sqlserver://192.168.8.44;databaseName=WebPlatForm;encrypt=true;trustServerCertificate=true;";
@@ -97,15 +117,19 @@
     boolean insertSuccess = false;
     try {
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        logInfo("嘗試連接資料庫", logPath);
         newConn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        logInfo("資料庫連接成功", logPath);
         
         pstmt = newConn.prepareStatement(insertSQL);
         pstmt.setString(1, userIP);
         pstmt.setString(2, userName);
         pstmt.setString(3, reportName);
         pstmt.setTimestamp(4, clickTime);
+        logInfo("準備執行SQL: " + insertSQL, logPath);
         int affectedRows = pstmt.executeUpdate();
         insertSuccess = (affectedRows > 0);
+        logInfo("SQL執行結果: 影響的行數 = " + affectedRows, logPath);
     } catch (Exception e) {
         String errorMessage = "插入使用者資訊時發生錯誤: " + e.getMessage();
         logError(errorMessage, e, logPath);
@@ -128,10 +152,12 @@
 
     // 如果插入失敗，嘗試寫入本地文件
     if (!insertSuccess) {
+        logInfo("資料庫插入失敗，嘗試寫入本地文件", logPath);
         PrintWriter logWriter = null;
         try {
             logWriter = new PrintWriter(new FileWriter(application.getRealPath("/") + "user_log.txt", true));
             logWriter.println(clickTime + "," + userIP + "," + userName + "," + reportName);
+            logInfo("成功寫入本地文件", logPath);
         } catch (Exception e) {
             logError("無法寫入本地日誌文件", e, logPath);
         } finally {
@@ -192,6 +218,17 @@
                 <!-- SiteMap-->
                 Home > Log Summary( Search MP log by WO )
             </ol>
+
+            <!-- Debug Information -->
+            <div style="background-color: #ffeeee; padding: 10px; margin-bottom: 10px;">
+                <h3>調試信息</h3>
+                <p>用戶IP: <%= userIP %></p>
+                <p>用戶名: <%= userName %></p>
+                <p>報告名稱: <%= reportName %></p>
+                <p>點擊時間: <%= clickTime %></p>
+                <p>資料庫插入是否成功: <%= insertSuccess ? "是" : "否" %></p>
+                <p>日誌文件路徑: <%= logPath %></p>
+            </div>
 
             <!-- Content-->
             <div id="body">
@@ -284,34 +321,5 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 <%@ include file="Foot.jsp" %>    
 <!-- /.content-wrapper-->
     <script src="./Scripts/modernizr-2.6.2.js"></script>
-    <script src="./Content/jquery/jquery.min.js"></script>
-    <script src="./Content/popper/popper.min.js"></script>
-    <script src="./Content/bootstrap/js/bootstrap.min.js"></script>
-    <script src="./Content/sb-admin/sb-admin.min.js"></script>
-    <script defer src="./Content/font-awesome/js/all.js"></script>
-
-    <script type="text/javascript">
-
-    </script>
-  </body>
-</html>
-
-<%@ include file="./maintain/ext/dbexit.jsp" %>
-
+    <script src="./Content/jquery/jquery.
 ```
-
-
-這個完整的程式碼包含了以下主要更新：
-
-1. 修改了 `logError` 方法，使其接受日誌文件路徑作為參數。
-2. 使用傳統的 try-catch-finally 結構代替 try-with-resources，以確保與舊版 Tomcat 兼容。
-3. 在 JSP 的主體部分定義了 `logPath` 變數，使用 `application.getRealPath("/")` 獲取應用程序的根目錄。
-4. 保留了原有的所有功能，包括工單查詢和數據顯示。
-5. 包含了使用者追蹤功能，連接到 192.168.8.44 上的 WebPlatForm 資料庫。
-6. 保留了錯誤處理和日誌記錄功能。
-
-使用這個程式碼時，請注意以下幾點：
-
-1. 確保伺服器上已安裝 Microsoft SQL Server JDBC 驅動程式，並且驅動程式版本與您的 Tomcat 和 Java 版本兼容。
-2. 如果遇到 SSL/TLS 相關的問題，可能需要調整連接字串中的 `encrypt` 和 `trustServerCertificate` 參數。
-3. 確保應用程式有
