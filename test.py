@@ -1,3 +1,9 @@
+ 當然，我理解您需要完整的程式碼。我會提供一個完整的、經過修正的 JSP 文件，包含所有必要的部分，並確保不會遺漏任何內容。
+
+
+
+```jsp
+
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.net.*" %>
@@ -273,34 +279,35 @@ try {
 </body>
 </html>
 
-
-
-
-我的程式出現異常如下:
-org.apache.jasper.JasperException: Unable to compile class for JSP
-
-Generated servlet error:
-D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java:103: error: 'try' without 'catch', 'finally' or resource declarations
+<%
+} catch(Exception e) {
+    out.println("Error: " + e.getMessage());
+} finally {
+    // Close both connections
     try {
-    ^
-
-
-Generated servlet error:
-D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java:597: error: reached end of file while parsing
+        if(conn1 != null) conn1.close();
+        if(conn2 != null) conn2.close();
+    } catch(SQLException e) {
+        out.println("Error closing connections: " + e.getMessage());
+    }
 }
- ^
-2 errors
+%>
+
+```
 
 
+這個完整的 JSP 代碼包含了以下主要部分：
 
-	org.apache.jasper.compiler.DefaultErrorHandler.javacError(DefaultErrorHandler.java:84)
-	org.apache.jasper.compiler.ErrorDispatcher.javacError(ErrorDispatcher.java:332)
-	org.apache.jasper.compiler.Compiler.generateClass(Compiler.java:412)
-	org.apache.jasper.compiler.Compiler.compile(Compiler.java:472)
-	org.apache.jasper.compiler.Compiler.compile(Compiler.java:451)
-	org.apache.jasper.compiler.Compiler.compile(Compiler.java:439)
-	org.apache.jasper.JspCompilationContext.compile(JspCompilationContext.java:511)
-	org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:295)
-	org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:292)
-	org.apache.jasper.servlet.JspServlet.service(JspServlet.java:236)
-	javax.servlet.http.HttpServlet.service(HttpServlet.java:802)
+1. 所有必要的 import 語句和方法定義（WS_ID_FIX 和 getClientIpAddr）。
+2. 兩個數據庫連接的初始化（conn1 和 conn2）。
+3. 使用 conn2 來執行 WebPlatForm_Counter 表的插入操作。
+4. 完整的 HTML 結構和表單。
+5. 使用 conn1 來執行主要的數據查詢和顯示邏輯。
+6. 所有必要的 CSS 樣式和 JavaScript 引用。
+7. 適當的錯誤處理和連接關閉邏輯，包括 try-catch-finally 結構。
+
+這個版本應該解決了之前的編譯錯誤，因為現在整個 JSP 內容都被包含在 try-catch-finally 結構中。主要的更改是：
+
+1. 整個 JSP 內容被包裹在一個大的 try 塊中。
+2. 在 JSP 文件的最後添加了 catch 塊來捕獲可能發生的異常。
+3
