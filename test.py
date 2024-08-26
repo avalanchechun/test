@@ -1,3 +1,8 @@
+ 當然，我理解您需要完整的程式碼。我會提供一個修正了之前問題的完整版本，並考慮到您使用的是較舊的 Tomcat 版本。
+
+
+
+```jsp
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.PreparedStatement" %>
@@ -51,18 +56,26 @@
         return ret;
     }
 
-    private void logError(String message, Exception e) {
-        try (PrintWriter logWriter = new PrintWriter(new FileWriter(application.getRealPath("/") + "error_log.txt", true))) {
+    private void logError(String message, Exception e, String logPath) {
+        PrintWriter logWriter = null;
+        try {
+            logWriter = new PrintWriter(new FileWriter(logPath, true));
             logWriter.println(new Timestamp(System.currentTimeMillis()) + ": " + message);
             if (e != null) {
                 e.printStackTrace(logWriter);
             }
         } catch (Exception logEx) {
             System.err.println("無法寫入錯誤日誌: " + logEx.getMessage());
+        } finally {
+            if (logWriter != null) {
+                logWriter.close();
+            }
         }
     }
 %>
 <%
+    String logPath = application.getRealPath("/") + "error_log.txt";
+    
     // 記錄使用者資訊
     String userIP = request.getRemoteAddr();
     String userName = request.getRemoteUser();
@@ -80,38 +93,51 @@
     // 插入資料到 WebPlatForm_Counter 表格
     String insertSQL = "INSERT INTO WebPlatForm.dbo.WebPlatForm_Counter ([IP], [USER], [REPORT], [CLICK_TIME]) VALUES (?, ?, ?, ?)";
     Connection newConn = null;
+    PreparedStatement pstmt = null;
     boolean insertSuccess = false;
     try {
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         newConn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
         
-        try (PreparedStatement pstmt = newConn.prepareStatement(insertSQL)) {
-            pstmt.setString(1, userIP);
-            pstmt.setString(2, userName);
-            pstmt.setString(3, reportName);
-            pstmt.setTimestamp(4, clickTime);
-            int affectedRows = pstmt.executeUpdate();
-            insertSuccess = (affectedRows > 0);
-        }
+        pstmt = newConn.prepareStatement(insertSQL);
+        pstmt.setString(1, userIP);
+        pstmt.setString(2, userName);
+        pstmt.setString(3, reportName);
+        pstmt.setTimestamp(4, clickTime);
+        int affectedRows = pstmt.executeUpdate();
+        insertSuccess = (affectedRows > 0);
     } catch (Exception e) {
         String errorMessage = "插入使用者資訊時發生錯誤: " + e.getMessage();
-        logError(errorMessage, e);
+        logError(errorMessage, e, logPath);
     } finally {
+        if (pstmt != null) {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                logError("關閉 PreparedStatement 時發生錯誤", e, logPath);
+            }
+        }
         if (newConn != null) {
             try {
                 newConn.close();
             } catch (SQLException e) {
-                logError("關閉資料庫連接時發生錯誤", e);
+                logError("關閉資料庫連接時發生錯誤", e, logPath);
             }
         }
     }
 
     // 如果插入失敗，嘗試寫入本地文件
     if (!insertSuccess) {
-        try (PrintWriter logWriter = new PrintWriter(new FileWriter(application.getRealPath("/") + "user_log.txt", true))) {
+        PrintWriter logWriter = null;
+        try {
+            logWriter = new PrintWriter(new FileWriter(application.getRealPath("/") + "user_log.txt", true));
             logWriter.println(clickTime + "," + userIP + "," + userName + "," + reportName);
         } catch (Exception e) {
-            logError("無法寫入本地日誌文件", e);
+            logError("無法寫入本地日誌文件", e, logPath);
+        } finally {
+            if (logWriter != null) {
+                logWriter.close();
+            }
         }
     }
 
@@ -272,6 +298,20 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
 
+```
 
-還是出現問題，error如下
-type Exception report message description The server encountered an internal error () that prevented it from fulfilling this request. exception org.apache.jasper.JasperException: Unable to compile class for JSP An error occurred at line: 9 in the jsp file: /LogSummary.jsp Generated servlet error: D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java:259: error: cannot find symbol try (PrintWriter logWriter = new PrintWriter(new FileWriter(application.getRealPath("/") + "error_log.txt", true))) { ^ symbol:   variable application location: class LogSummary_jsp An error occurred at line: 9 in the jsp file: /LogSummary.jsp Generated servlet error: Note: D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java uses unchecked or unsafe operations. An error occurred at line: 9 in the jsp file: /LogSummary.jsp Generated servlet error: Note: Recompile with -Xlint:unchecked for details. 1 error org.apache.jasper.compiler.DefaultErrorHandler.javacError(DefaultErrorHandler.java:84) org.apache.jasper.compiler.ErrorDispatcher.javacError(ErrorDispatcher.java:332) org.apache.jasper.compiler.Compiler.generateClass(Compiler.java:412) org.apache.jasper.compiler.Compiler.compile(Compiler.java:472) org.apache.jasper.compiler.Compiler.compile(Compiler.java:451) org.apache.jasper.compiler.Compiler.compile(Compiler.java:439) org.apache.jasper.JspCompilationContext.compile(JspCompilationContext.java:511) org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:295) org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:292) org.apache.jasper.servlet.JspServlet.service(JspServlet.java:236) javax.servlet.http.HttpServlet.service(HttpServlet.java:802) note The full stack trace of the root cause is available in the Apache Tomcat/5.0.28 logs.
+
+這個完整的程式碼包含了以下主要更新：
+
+1. 修改了 `logError` 方法，使其接受日誌文件路徑作為參數。
+2. 使用傳統的 try-catch-finally 結構代替 try-with-resources，以確保與舊版 Tomcat 兼容。
+3. 在 JSP 的主體部分定義了 `logPath` 變數，使用 `application.getRealPath("/")` 獲取應用程序的根目錄。
+4. 保留了原有的所有功能，包括工單查詢和數據顯示。
+5. 包含了使用者追蹤功能，連接到 192.168.8.44 上的 WebPlatForm 資料庫。
+6. 保留了錯誤處理和日誌記錄功能。
+
+使用這個程式碼時，請注意以下幾點：
+
+1. 確保伺服器上已安裝 Microsoft SQL Server JDBC 驅動程式，並且驅動程式版本與您的 Tomcat 和 Java 版本兼容。
+2. 如果遇到 SSL/TLS 相關的問題，可能需要調整連接字串中的 `encrypt` 和 `trustServerCertificate` 參數。
+3. 確保應用程式有
