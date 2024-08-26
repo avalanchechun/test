@@ -1,5 +1,10 @@
+ 當然，我很樂意為您提供完整的程式碼。我會整合之前的修改，並確保包含所有必要的部分。
+
+
+
+```jsp
+
 <%@ page contentType="text/html; charset=UTF-8" %>
-<%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.net.*" %>
 <%!
@@ -68,6 +73,26 @@
     }
 %>
 <%
+// First database connection (assumed to be your existing connection)
+Connection conn1 = null;
+// Second database connection (for WebPlatForm database)
+Connection conn2 = null;
+
+try {
+    // Initialize your first database connection (keep your existing code)
+    Class.forName("com.microsoft.jdbc.sqlserver.SQLServerDriver");
+    String url1 = "jdbc:microsoft:sqlserver://YOUR_SERVER1:1433;DatabaseName=YOUR_DB1";
+    String user1 = "your_username1";
+    String password1 = "your_password1";
+    conn1 = DriverManager.getConnection(url1, user1, password1);
+
+    // Initialize the second database connection
+    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    String url2 = "jdbc:sqlserver://YOUR_SERVER2:1433;databaseName=WebPlatForm";
+    String user2 = "your_username2";
+    String password2 = "your_password2";
+    conn2 = DriverManager.getConnection(url2, user2, password2);
+
     String user = request.getParameter("user");
     if (user == null) {
         user = "";
@@ -88,8 +113,8 @@
     String clicks_user = user;
     
     try {
-        PreparedStatement pstmt = conn.prepareStatement(
-            "INSERT INTO WebPlatForm.[dbo].[WebPlatForm_Counter] ([IP], [USER], [REPORT], [CLICK_TIME]) " +
+        PreparedStatement pstmt = conn2.prepareStatement(
+            "INSERT INTO [dbo].[WebPlatForm_Counter] ([IP], [USER], [REPORT], [CLICK_TIME]) " +
             "VALUES (?, ?, ?, GETDATE())");
         pstmt.setString(1, ip);
         pstmt.setString(2, clicks_user);
@@ -100,9 +125,12 @@
         out.println("Error inserting into WebPlatForm_Counter: " + e.getMessage());
     }
 
-    String WO = toString(request.getParameter("WO"));
-    String SkipDouble = toString(request.getParameter("SkipDouble"));
-    if (SkipDouble.length()==0 ) {
+    String WO = request.getParameter("WO");
+    if (WO == null) {
+        WO = "";
+    }
+    String SkipDouble = request.getParameter("SkipDouble");
+    if (SkipDouble == null || SkipDouble.length() == 0) {
         SkipDouble = "1";
     }
 %>
@@ -169,7 +197,7 @@
                     
                     String sql = "use TIPTOP;select * from csfzr109 where PRODUCT_NUM='"+WO+"' ";
                     
-                    Statement stmt = conn.createStatement();
+                    Statement stmt = conn1.createStatement();
                     ResultSet rs=stmt.executeQuery(sql);
                     int quantity=1;
                     String product = "";
@@ -223,6 +251,7 @@
                         <td align="center" ><%=dformat.format((100.0*cnt)/quantity)%>%</td>
                         </tr>
                 <%
+                        pWS_ID = WS_ID;
                     }
                 %>
                         </table>
@@ -250,9 +279,35 @@
 </body>
 </html>
 
-<%@ include file="./maintain/ext/dbexit.jsp" %>
+<%
+} catch(Exception e) {
+    out.println("Error: " + e.getMessage());
+} finally {
+    // Close both connections
+    try {
+        if(conn1 != null) conn1.close();
+        if(conn2 != null) conn2.close();
+    } catch(SQLException e) {
+        out.println("Error closing connections: " + e.getMessage());
+    }
+}
+%>
 
-我的程式出現問題，無法insert相關資訊進資料庫，
-相關資訊的部分包含使用者IP,使用者名稱,REPORT,CLICK_TIME，
-網頁上面有顯示error內容如下
-Error inserting into WebPlatForm_Counter: [Microsoft][SQLServer 2000 Driver for JDBC][SQLServer]無效的物件名稱 'WebPlatForm.dbo.WebPlatForm_Counter'。 
+```
+
+這個完整的 JSP 代碼包含了以下主要部分：
+
+1. 必要的 import 語句和方法定義（WS_ID_FIX 和 getClientIpAddr）。
+2. 兩個數據庫連接的初始化（conn1 和 conn2）。
+3. 使用 conn2 來執行 WebPlatForm_Counter 表的插入操作。
+4. 原有的 HTML 結構和表單。
+5. 使用 conn1 來執行主要的數據查詢和顯示邏輯。
+6. 所有必要的 CSS 樣式和 JavaScript 引用。
+7. 適當的錯誤處理和連接關閉邏輯。
+
+要使用這個代碼，你需要：
+
+1. 替換 `YOUR_SERVER1`、`your_username1`、`your_password1` 為你的第一個數據庫（現有的）的連接詳情。
+2. 替換 `YOUR_SERVER2`、`your_username2`、`your_password2` 為 WebPlatForm 數據庫的連接詳情。
+3. 確保 `_title` 變量在某處被定義（可能在包含的文件中）。
+4. 確保 "Navigation.jsp" 和 "Foot.jsp" 文件存在於
