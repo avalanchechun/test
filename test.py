@@ -1,9 +1,3 @@
- 當然，我很樂意為您提供完整的程式碼。我會結合原始代碼和我們的修改，為您呈現一個完整的、經過錯誤處理優化的版本。
-
-
-
-```jsp
-
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.*" %>
@@ -94,28 +88,16 @@
     String clicks_user = user;
     
     try {
-        // First, check if the table exists
-        DatabaseMetaData dbm = conn.getMetaData();
-        ResultSet tables = dbm.getTables(null, "dbo", "WebPlatForm_Counter", null);
-        if (tables.next()) {
-            // Table exists
-            PreparedStatement pstmt = conn.prepareStatement(
-                "INSERT INTO WebPlatForm.dbo.WebPlatForm_Counter ([IP], [USER], [REPORT], [CLICK_TIME]) " +
-                "VALUES (?, ?, ?, GETDATE())");
-            pstmt.setString(1, ip);
-            pstmt.setString(2, clicks_user);
-            pstmt.setString(3, clicks_link);
-            pstmt.executeUpdate();
-            pstmt.close();
-        } else {
-            // Table doesn't exist, log the error
-            System.err.println("Table WebPlatForm_Counter does not exist in the WebPlatForm database");
-        }
+        PreparedStatement pstmt = conn.prepareStatement(
+            "INSERT INTO WebPlatForm.[dbo].[WebPlatForm_Counter] ([IP], [USER], [REPORT], [CLICK_TIME]) " +
+            "VALUES (?, ?, ?, GETDATE())");
+        pstmt.setString(1, ip);
+        pstmt.setString(2, clicks_user);
+        pstmt.setString(3, clicks_link);
+        pstmt.executeUpdate();
+        pstmt.close();
     } catch (SQLException e) {
-        // Log the full stack trace
-        e.printStackTrace();
-        // You might want to log this to a file instead of printing to console
-        System.err.println("Error inserting into WebPlatForm_Counter: " + e.getMessage());
+        out.println("Error inserting into WebPlatForm_Counter: " + e.getMessage());
     }
 
     String WO = toString(request.getParameter("WO"));
@@ -241,7 +223,6 @@
                         <td align="center" ><%=dformat.format((100.0*cnt)/quantity)%>%</td>
                         </tr>
                 <%
-                        pWS_ID = WS_ID;
                     }
                 %>
                         </table>
@@ -271,27 +252,7 @@
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
 
-```
-
-
-這個完整的程式碼包含了以下幾個主要的改進：
-
-1. 在插入 WebPlatForm_Counter 表之前，先檢查表是否存在。
-2. 提供了更詳細的錯誤日誌記錄。
-3. 使用 `System.err.println()` 輸出錯誤信息，您可能想要將其替換為更合適的日誌框架。
-
-此外，這個版本還保留了原始程式的所有功能，包括：
-
-- 工單信息的顯示
-- 測試摘要的查詢和顯示
-- 用戶界面的所有元素
-
-為了確保程式正常運行，您還需要確認以下幾點：
-
-1. `dbinclude.jsp` 中的數據庫連接字符串是正確的。
-2. 數據庫用戶有訪問 `WebPlatForm` 數據庫和 `WebPlatForm_Counter` 表的必要權限。
-3. `WebPlatForm` 數據庫和 `WebPlatForm_Counter` 表確實存在。
-
-如果 `WebPlatForm_Counter` 表不存在，您可能需要創建它。您可以使用之前提供的 SQL 腳本來創建表。
-
-這個優化後的版本應該能夠更好地處理可能出現的錯誤，並提供更多的診斷信息。如果您在運行這個程式時仍然遇到問題，請提供更多的錯誤信息，我會很樂意幫助您進一步調試。
+我的程式出現問題，無法insert相關資訊進資料庫，
+相關資訊的部分包含使用者IP,使用者名稱,REPORT,CLICK_TIME，
+網頁上面有顯示error內容如下
+Error inserting into WebPlatForm_Counter: [Microsoft][SQLServer 2000 Driver for JDBC][SQLServer]無效的物件名稱 'WebPlatForm.dbo.WebPlatForm_Counter'。 
