@@ -1,4 +1,4 @@
- 當然,我很抱歉之前的回答有所遺漏。我會提供完整的程式碼,包括所有原始內容和新增的使用者追蹤功能。
+ 當然,我理解您需要完整的程式碼。我會提供一個包含所有原始功能和新增使用者追蹤功能的完整版本。
 
 
 
@@ -7,6 +7,10 @@
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.PreparedStatement" %>
 <%@ page import="java.sql.Timestamp" %>
+<%@ page import="java.sql.DriverManager" %>
+<%@ page import="java.sql.Connection" %>
+<%@ page import="java.io.FileWriter" %>
+<%@ page import="java.io.PrintWriter" %>
 <%!
     public static String WS_ID_FIX( String wsid, String product ) {
         String ret=wsid;
@@ -51,6 +55,17 @@
 
         return ret;
     }
+
+    private void logError(String message, Exception e) {
+        try (PrintWriter out = new PrintWriter(new FileWriter("error_log.txt", true))) {
+            out.println(new Timestamp(System.currentTimeMillis()) + ": " + message);
+            if (e != null) {
+                e.printStackTrace(out);
+            }
+        } catch (Exception logEx) {
+            System.err.println("無法寫入錯誤日誌: " + logEx.getMessage());
+        }
+    }
 %>
 <%
     // 記錄使用者資訊
@@ -62,17 +77,47 @@
     String reportName = "LogSummary";
     Timestamp clickTime = new Timestamp(System.currentTimeMillis());
 
+    // 新增資料庫連接資訊
+    String dbUrl = "jdbc:sqlserver://192.168.8.44;databaseName=WebPlatForm;encrypt=true;trustServerCertificate=true;";
+    String dbUser = "your_username";
+    String dbPassword = "your_password";
+
     // 插入資料到 WebPlatForm_Counter 表格
-    String insertSQL = "INSERT INTO [WebPlatForm].[dbo].[WebPlatForm_Counter] ([IP], [USER], [REPORT], [CLICK_TIME]) VALUES (?, ?, ?, ?)";
-    try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
-        pstmt.setString(1, userIP);
-        pstmt.setString(2, userName);
-        pstmt.setString(3, reportName);
-        pstmt.setTimestamp(4, clickTime);
-        pstmt.executeUpdate();
+    String insertSQL = "INSERT INTO WebPlatForm.dbo.WebPlatForm_Counter ([IP], [USER], [REPORT], [CLICK_TIME]) VALUES (?, ?, ?, ?)";
+    Connection newConn = null;
+    boolean insertSuccess = false;
+    try {
+        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        newConn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        
+        try (PreparedStatement pstmt = newConn.prepareStatement(insertSQL)) {
+            pstmt.setString(1, userIP);
+            pstmt.setString(2, userName);
+            pstmt.setString(3, reportName);
+            pstmt.setTimestamp(4, clickTime);
+            int affectedRows = pstmt.executeUpdate();
+            insertSuccess = (affectedRows > 0);
+        }
     } catch (Exception e) {
-        // 處理可能的異常
-        out.println("Error recording user information: " + e.getMessage());
+        String errorMessage = "插入使用者資訊時發生錯誤: " + e.getMessage();
+        logError(errorMessage, e);
+    } finally {
+        if (newConn != null) {
+            try {
+                newConn.close();
+            } catch (SQLException e) {
+                logError("關閉資料庫連接時發生錯誤", e);
+            }
+        }
+    }
+
+    // 如果插入失敗，嘗試寫入本地文件
+    if (!insertSuccess) {
+        try (PrintWriter out = new PrintWriter(new FileWriter("user_log.txt", true))) {
+            out.println(clickTime + "," + userIP + "," + userName + "," + reportName);
+        } catch (Exception e) {
+            logError("無法寫入本地日誌文件", e);
+        }
     }
 
     String WO = toString(request.getParameter("WO"));
@@ -235,14 +280,18 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 ```
 
 
-這個完整的程式碼包含了原有的 LogSummary.jsp 的所有功能,並添加了新的使用者追蹤功能。主要的變更包括:
+這個完整的程式碼包含了以下主要部分：
 
-1. 在頁面頂部添加了必要的 import 語句。
+1. 原有的 LogSummary.jsp 的所有功能。
+2. 新增的使用者追蹤功能，包括連接到 192.168.8.44 上的 WebPlatForm 資料庫。
+3. 錯誤處理和日誌記錄功能。
+4. 如果資料庫插入失敗，會將使用者資訊寫入本地文件。
 
-2. 在處理請求參數之前,添加了代碼來收集使用者資訊並將其插入到 WebPlatForm_Counter 表格中。
+請注意以下幾點：
 
-3. 保留了原有的所有功能,包括工單查詢、資料顯示等。
+1. 您需要將 `your_username` 和 `your_password` 替換為實際的資料庫用戶名和密碼。
+2. 確保伺服器上已安裝 Microsoft SQL Server JDBC 驅動程式。
+3. 如果遇到 SSL/TLS 相關的問題，可能需要調整連接字串中的 `encrypt` 和 `trustServerCertificate` 參數。
+4. 確保執行此 JSP 的應用程式伺服器有權限連接到 192.168.8.44 的 SQL Server。
 
-4. 保留了原有的 HTML 結構、樣式和 JavaScript 引用。
-
-這個更新後的版本應該能夠滿足您的需求,既保留了原有功能,又添加了使用者追蹤。如果您需要進一步的修改或有任何問題,請隨時告訴我。
+如果您在運行這段程式碼時遇到任何問題，請查看 error_log.txt 文件中的錯誤訊息，這將有助於進一步診斷和解決問題。如果您需要任何額外的幫助或有任何問題，請隨時告訴我。
