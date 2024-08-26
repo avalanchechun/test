@@ -1,9 +1,3 @@
- 當然，我很樂意為您提供完整的程式碼。我會整合之前的修改，並確保包含所有必要的部分。
-
-
-
-```jsp
-
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.net.*" %>
@@ -81,16 +75,16 @@ Connection conn2 = null;
 try {
     // Initialize your first database connection (keep your existing code)
     Class.forName("com.microsoft.jdbc.sqlserver.SQLServerDriver");
-    String url1 = "jdbc:microsoft:sqlserver://YOUR_SERVER1:1433;DatabaseName=YOUR_DB1";
-    String user1 = "your_username1";
-    String password1 = "your_password1";
+    String url1 = "jdbc:microsoft:sqlserver://192.168.197.12:1433;DatabaseName=RMA";
+    String user1 = "logsystem";
+    String password1 = "LogUser123456";
     conn1 = DriverManager.getConnection(url1, user1, password1);
 
     // Initialize the second database connection
     Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    String url2 = "jdbc:sqlserver://YOUR_SERVER2:1433;databaseName=WebPlatForm";
-    String user2 = "your_username2";
-    String password2 = "your_password2";
+    String url2 = "jdbc:sqlserver://192.168.8.44:1433;databaseName=WebPlatForm";
+    String user2 = "paulchun_huang";
+    String password2 = "Aa123456";
     conn2 = DriverManager.getConnection(url2, user2, password2);
 
     String user = request.getParameter("user");
@@ -279,35 +273,34 @@ try {
 </body>
 </html>
 
-<%
-} catch(Exception e) {
-    out.println("Error: " + e.getMessage());
-} finally {
-    // Close both connections
+
+
+
+我的程式出現異常如下:
+org.apache.jasper.JasperException: Unable to compile class for JSP
+
+Generated servlet error:
+D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java:103: error: 'try' without 'catch', 'finally' or resource declarations
     try {
-        if(conn1 != null) conn1.close();
-        if(conn2 != null) conn2.close();
-    } catch(SQLException e) {
-        out.println("Error closing connections: " + e.getMessage());
-    }
+    ^
+
+
+Generated servlet error:
+D:\Tomcat 5.0\work\Catalina\localhost\rdmplog\org\apache\jsp\LogSummary_jsp.java:597: error: reached end of file while parsing
 }
-%>
+ ^
+2 errors
 
-```
 
-這個完整的 JSP 代碼包含了以下主要部分：
 
-1. 必要的 import 語句和方法定義（WS_ID_FIX 和 getClientIpAddr）。
-2. 兩個數據庫連接的初始化（conn1 和 conn2）。
-3. 使用 conn2 來執行 WebPlatForm_Counter 表的插入操作。
-4. 原有的 HTML 結構和表單。
-5. 使用 conn1 來執行主要的數據查詢和顯示邏輯。
-6. 所有必要的 CSS 樣式和 JavaScript 引用。
-7. 適當的錯誤處理和連接關閉邏輯。
-
-要使用這個代碼，你需要：
-
-1. 替換 `YOUR_SERVER1`、`your_username1`、`your_password1` 為你的第一個數據庫（現有的）的連接詳情。
-2. 替換 `YOUR_SERVER2`、`your_username2`、`your_password2` 為 WebPlatForm 數據庫的連接詳情。
-3. 確保 `_title` 變量在某處被定義（可能在包含的文件中）。
-4. 確保 "Navigation.jsp" 和 "Foot.jsp" 文件存在於
+	org.apache.jasper.compiler.DefaultErrorHandler.javacError(DefaultErrorHandler.java:84)
+	org.apache.jasper.compiler.ErrorDispatcher.javacError(ErrorDispatcher.java:332)
+	org.apache.jasper.compiler.Compiler.generateClass(Compiler.java:412)
+	org.apache.jasper.compiler.Compiler.compile(Compiler.java:472)
+	org.apache.jasper.compiler.Compiler.compile(Compiler.java:451)
+	org.apache.jasper.compiler.Compiler.compile(Compiler.java:439)
+	org.apache.jasper.JspCompilationContext.compile(JspCompilationContext.java:511)
+	org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:295)
+	org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:292)
+	org.apache.jasper.servlet.JspServlet.service(JspServlet.java:236)
+	javax.servlet.http.HttpServlet.service(HttpServlet.java:802)
