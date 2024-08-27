@@ -5,3 +5,18 @@ insert into [192.168.8.44].[WebPlatForm].[dbo].[WebPlatForm_Counter]
 (IP,[USER],REPORT,CLICK_TIME)
 values 
 (@IP,@UserName,@Report,convert(varchar, getdate(), 120))
+
+
+
+
+
+
+
+
+
+
+
+
+
+####驅動Insert
+EXEC write_Click @IP = 'London',@UserName = '11', @Report = 'WA1 1DP';
