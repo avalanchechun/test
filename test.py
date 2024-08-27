@@ -1,8 +1,3 @@
- 當然，我會提供一個完整的程式碼版本，包含所有的改進和修復。這個版本將包括整個 JSP 頁面的內容，並整合了我們之前討論的所有更改。
-
-
-
-```jsp
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.*" %>
@@ -105,11 +100,11 @@
                     String pWS_ID = "";
                     String moYM = "PELogSr_20" + WO.substring(4, 8);
                     
-                    Connection conn = null;
+
                     PreparedStatement pstmt = null;
                     ResultSet rs = null;
                     try {
-                        conn = // 你的數據庫連接方法
+
                         
                         String sql = "USE TIPTOP; SELECT * FROM csfzr109 WHERE PRODUCT_NUM = ?";
                         pstmt = conn.prepareStatement(sql);
@@ -190,12 +185,11 @@
                         </div>
                 <%        
                     } catch (SQLException e) {
-                        // 記錄錯誤
+
                         e.printStackTrace();
-                        // 顯示用戶友好的錯誤消息
+
                         out.println("<div style='color: red;'>檢索數據時發生錯誤。請稍後再試。</div>");
                     } finally {
-                        // 按創建的相反順序關閉資源
                         if (rs != null) try { rs.close(); } catch (SQLException e) { /* ignored */ }
                         if (pstmt != null) try { pstmt.close(); } catch (SQLException e) { /* ignored */ }
                         if (conn != null) try { conn.close(); } catch (SQLException e) { /* ignored */ }
@@ -221,26 +215,3 @@
 </html>
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
-
-```
-
-
-這個完整的 JSP 頁面包含了我們之前討論的所有改進和修復。主要的更改包括：
-
-1. 使用 PreparedStatement 來防止 SQL 注入。
-2. 正確初始化和使用數據庫資源。
-3. 使用實際的用戶信息而不是硬編碼值。
-4. 使用 try-with-resources 語句來確保資源的正確關閉。
-5. 改進了錯誤處理和日誌記錄。
-
-請注意，你需要替換以下注釋with your actual database connection method：
-
-```java
-conn = // 你的數據庫連接方法
-```
-
-用你實際的數據庫連接方法。
-
-此外，確保 `./maintain/ext/dbinclude.jsp`、`Navigation.jsp` 和 `Foot.jsp` 文件存在並包含正確的內容。
-
-這個版本應該解決了基本的查詢問題，並允許正確地將用戶信息插
