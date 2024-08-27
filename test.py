@@ -1,3 +1,8 @@
+ 當然，我會為您提供完整的更新後的程式碼。我將保留原始程式碼的所有功能，並在開頭加入使用者資訊的插入。
+
+
+
+```jsp
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.*" %>
@@ -36,6 +41,27 @@
     }
 %>
 <%
+    // Insert user information as soon as the page is accessed
+    String userIP = request.getRemoteAddr();
+    String userName = request.getRemoteUser();
+    if (userName == null) {
+        userName = "Unknown";
+    }
+    String reportName = "LogSummary";
+    
+    try {
+        String sql = "USE master; EXEC write_Click @IP = ?, @UserName = ?, @Report = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userIP);
+            pstmt.setString(2, userName);
+            pstmt.setString(3, reportName);
+            pstmt.executeUpdate();
+        }
+    } catch (SQLException e) {
+        // Log the error or handle it appropriately
+        e.printStackTrace();
+    }
+
     String WO = request.getParameter("WO");
     WO = (WO != null) ? WO : "";
     String SkipDouble = request.getParameter("SkipDouble");
@@ -104,28 +130,10 @@
                     PreparedStatement pstmt = null;
                     ResultSet rs = null;
                     try {
-
-                        
                         String sql = "USE TIPTOP; SELECT * FROM csfzr109 WHERE PRODUCT_NUM = ?";
                         pstmt = conn.prepareStatement(sql);
                         pstmt.setString(1, WO);
                         rs = pstmt.executeQuery();
-                        
-                        String userIP = request.getRemoteAddr();
-                        String userName = request.getRemoteUser();
-                        if (userName == null) {
-                            userName = "Unknown";
-                        }
-                        String reportName = "LogSummary";
-                        Timestamp clickTime = new Timestamp(System.currentTimeMillis());
-                        
-                        String sql1 = "USE master; EXEC write_Click @IP = ?, @UserName = ?, @Report = ?";
-                        try (PreparedStatement pstmt1 = conn.prepareStatement(sql1)) {
-                            pstmt1.setString(1, userIP);
-                            pstmt1.setString(2, userName);
-                            pstmt1.setString(3, reportName);
-                            pstmt1.executeUpdate();
-                        }
                         
                         int quantity = 1;
                         String product = "";
@@ -185,9 +193,7 @@
                         </div>
                 <%        
                     } catch (SQLException e) {
-
                         e.printStackTrace();
-
                         out.println("<div style='color: red;'>檢索數據時發生錯誤。請稍後再試。</div>");
                     } finally {
                         if (rs != null) try { rs.close(); } catch (SQLException e) { /* ignored */ }
@@ -216,10 +222,20 @@
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
 
+```
 
+這個更新後的完整程式碼包含以下主要變更：
 
+1. 在頁面頂部，緊接在初始聲明和導入之後，添加了用戶資訊插入的代碼。
 
+2. 使用者資訊（IP地址、用戶名和報告名稱）現在會在頁面被訪問時立即插入到數據庫中。
 
+3. 移除了之前在 WO 處理塊內的重複插入代碼。
 
+4. 將插入操作包裝在 try-catch 塊中，以優雅地處理任何潛在的數據庫錯誤。
 
-我的需求是當使用者進入網頁後就將使用者的相關資訊ip等等insert到資料表，而不是使用者查詢後才insert到資料表
+這個更新確保了無論用戶是否執行搜索，他們的訪問信息都會被記錄下來。同時，頁面的其他所有功能都保持不變。
+
+請注意，您可能需要根據您的具體環境和需求進行一些小的調整，例如確保 `conn` 對象在頁面頂部可用，或者根據您的日誌記錄策略調整錯誤處理方式。
+
+另外，如果您預計網站會有高流量，您可能需要考慮將這個日誌記錄過程移至異步操作，以避免影響頁面載入時間。
