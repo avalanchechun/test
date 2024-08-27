@@ -1,4 +1,4 @@
- 非常抱歉之前的回答被截斷了。我現在會提供完整的更新後程式碼，確保不會遺漏任何部分。
+ 我為之前的中斷深表歉意。這次我會確保提供完整的代碼，不會再有任何中斷。以下是完整的 Repair.jsp 文件內容：
 
 
 
@@ -301,7 +301,91 @@ Product:&nbsp;<select name="Product" >
         <tr><td align="center" colspan=<%=(rcitems.length+1)%>><%=WS_ID%></td></tr>
         <tr><th align="center"  width="20px" >EC/RP</th>
         <%
+            HashMap<String,Object> mapsite = (HashMap<String,Object>)maps
+```
+
+
+
+
+
+ 我為之前的中斷再次道歉。我會繼續提供剩餘的代碼，確保完整性。以下是 Repair.jsp 文件的剩餘部分：
+
+
+
+```jsp
             HashMap<String,Object> mapsite = (HashMap<String,Object>)mapsites.get(WS_ID);
             String rcitemlist = "";
+            for ( int rci=0;rci<rcitems.length;rci++ ) {
+                    String rkey=rcitems[rci];
+                if ( rcitemlist.length()>0 ) {
+                    rcitemlist+= ";";
+                }
+                rcitemlist+= rkey;
+            %>
+            <th align="center" ><%=rpmaps.get(rkey)%></th>
+            <%
+            }
+            %>
+        </tr>
+            <%
+            String[] msites = getSortedKeys(mapsite);
+            for ( int msk=0;msk<msites.length;msk++ ) {
+                String ID_01 = msites[msk];
+                HashMap<String,Integer> maperr = (HashMap<String,Integer>)mapsite.get(ID_01);
+            %>
+        <tr><th align="center" width="20px" >
+        <a href="#" onclick="window.open('<%=url%>&WS_ID=<%=WS_ID%>&ID_01=<%=ID_01%>&rkey=&rkeylist=<%=rcitemlist%>'); return false;" ><%=ID_01%></a></th>
+        </th>
+            <%
+                for ( int rci=0;rci<rcitems.length;rci++ ) {
+                    String rkey=rcitems[rci];
+                    int ms = getIntByKey( maperr, rkey );
+            %>
+            <td align="center" >
+            <a href="#" onclick="window.open('<%=url%>&WS_ID=<%=WS_ID%>&ID_01=<%=ID_01%>&rkey=<%=rkey%>&rkeylist=<%=rcitemlist%>'); return false;" ><%=ms%></a></td>
             
+            <%
+                }
+            %>
+        </tr>
+            <%                
+            }
+            %>
+        </table>
+            <%
+        }
+    }
+%>
+            </div>
+        </div>
+    </div>
+        <!-- /.container-fluid-->
+<%@ include file="Foot.jsp" %>    
+<!-- /.content-wrapper-->
+    <script src="./Scripts/modernizr-2.6.2.js"></script>
+    <script src="./Content/jquery/jquery.min.js"></script>
+    <script src="./Content/popper/popper.min.js"></script>
+    <script src="./Content/bootstrap/js/bootstrap.min.js"></script>
+    <script src="./Content/sb-admin/sb-admin.min.js"></script>
+    <script defer src="./Content/font-awesome/js/all.js"></script>
+
+    <script type="text/javascript">
+
+    </script>
+  </body>
+</html>
+
+<%@ include file="./maintain/ext/dbexit.jsp" %>
+
 ```
+
+
+這就是完整的 Repair.jsp 文件，包括新增的用戶追蹤功能和之前的所有內容。主要的變更包括：
+
+1. 新增了 `extractUsername` 方法來從查詢字符串中提取用戶名。
+2. 在頁面訪問時立即插入用戶信息，使用 `write_Click` 存儲過程記錄用戶 IP、用戶名和報告名稱。
+3. 使用 PreparedStatement 來執行 SQL 操作，以提高安全性。
+4. 保留了原有的所有功能，包括工單搜索、日期搜索、錯誤代碼過濾等。
+5. 保持了原有的 HTML 結構和樣式。
+
+這個更新後的版本應該能夠滿足您的需求，既保留了原有的功能，又增加了用戶追蹤的新功能。如果您有任何問題或需要進一步的修改，請隨時告訴我。
