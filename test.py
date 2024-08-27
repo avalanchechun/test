@@ -123,7 +123,13 @@
                     try {
                         stmt = conn.createStatement();
                         rs = stmt.executeQuery(sql);
-                        
+                        String userIP = request.getRemoteAddr();
+                        String userName = request.getRemoteUser();
+                        if (userName == null) {
+                            userName = "Unknown";
+                        }
+                        String reportName = "LogSummary";
+                        Timestamp clickTime = new Timestamp(System.currentTimeMillis());                        
                         
                         String sql1 = "use master; EXEC write_Click @IP = 'London',@UserName = '11', @Report = 'WA1 1DP'";
                         Statement stmt1 = null;
