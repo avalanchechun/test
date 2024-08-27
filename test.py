@@ -1,9 +1,3 @@
- 當然,我會為您提供完整的更新後的程式碼。這裡是完整的修改版本,包含了新增的用戶記錄功能:
-
-
-
-```jsp
-
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.Timestamp" %>
@@ -60,28 +54,6 @@
         SkipDouble = "1";
     }
 
-    // 記錄使用者資訊
-    String userIP = request.getRemoteAddr();
-    String userName = request.getRemoteUser();
-    if (userName == null) {
-        userName = "Unknown";
-    }
-    String reportName = "LogSummary";
-    Timestamp clickTime = new Timestamp(System.currentTimeMillis());
-
-    String insertSQL = "INSERT INTO [192.168.8.44].[WebPlatForm].[dbo].[WebPlatForm_Counter] (IP, [USER], REPORT, CLICK_TIME) VALUES (?, ?, ?, ?)";
-
-    try {
-        PreparedStatement pstmt = conn.prepareStatement(insertSQL);
-        pstmt.setString(1, userIP);
-        pstmt.setString(2, userName);
-        pstmt.setString(3, reportName);
-        pstmt.setTimestamp(4, clickTime);
-        pstmt.executeUpdate();
-        pstmt.close();
-    } catch (Exception e) {
-        out.println("Error logging user information: " + e.getMessage());
-    }
 %>
 
 <html>
@@ -148,6 +120,29 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
         
         Statement stmt = conn.createStatement();
         ResultSet rs=stmt.executeQuery(sql);
+  
+        //record使用者資訊
+        String userIP = request.getRemoteAddr();
+        String userName = request.getRemoteUser();
+        if (userName == null) {
+            userName = "Unknown";
+        }
+        String reportName = "LogSummary";
+        Timestamp clickTime = new Timestamp(System.currentTimeMillis());
+    
+        String insertSQL = "INSERT INTO [192.168.8.44].[WebPlatForm].[dbo].[WebPlatForm_Counter] (IP, [USER], REPORT, CLICK_TIME) VALUES (?, ?, ?, ?)";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(insertSQL);
+            pstmt.setString(1, userIP);
+            pstmt.setString(2, userName);
+            pstmt.setString(3, reportName);
+            pstmt.setTimestamp(4, clickTime);
+            pstmt.executeUpdate();
+            pstmt.close();
+        } catch (Exception e) {
+            out.println("<script>alert('資料寫入失敗！');</script>");
+        }        
+        
         int quantity=1;
         String product = "";
         if ( rs.next() ) {
@@ -232,45 +227,3 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 </html>
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
-
-```
-
-這個更新後的程式碼包含了以下主要變更：
-
-1. 在檔案頂部添加了必要的 import 語句：
-   ```jsp
-   <%@ page import="java.sql.Timestamp" %>
-   <%@ page import="java.sql.PreparedStatement" %>
-   ```
-
-2. 在處理請求參數之後,新增了記錄用戶資訊的代碼：
-   ```jsp
-   // 記錄使用者資訊
-   String userIP = request.getRemoteAddr();
-   String userName = request.getRemoteUser();
-   if (userName == null) {
-       userName = "Unknown";
-   }
-   String reportName = "LogSummary";
-   Timestamp clickTime = new Timestamp(System.currentTimeMillis());
-
-   String insertSQL = "INSERT INTO [192.168.8.44].[WebPlatForm].[dbo].[WebPlatForm_Counter] (IP, [USER], REPORT, CLICK_TIME) VALUES (?, ?, ?, ?)";
-
-   try {
-       PreparedStatement pstmt = conn.prepareStatement(insertSQL);
-       pstmt.setString(1, userIP);
-       pstmt.setString(2, userName);
-       pstmt.setString(3, reportName);
-       pstmt.setTimestamp(4, clickTime);
-       pstmt.executeUpdate();
-       pstmt.close();
-   } catch (Exception e) {
-       out.println("Error logging user information: " + e.getMessage());
-   }
-   ```
-
-3. 保留了原始程式碼的所有其他部分,包括 HTML 結構、CSS 樣式、JavaScript 引用等。
-
-這個更新確保了每次訪問頁面時都會記錄用戶信息,同時保留了原有的所有功能。請確保資料庫連接 (conn) 在此代碼執行之前已正確初始化,這通常在 "dbinclude.jsp" 文件中處理。
-
-如果你在實施這些更改時遇到任何問題,或者需要進一步的修改,請告訴我。
