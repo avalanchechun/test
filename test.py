@@ -215,3 +215,11 @@
 </html>
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
+
+
+
+
+
+
+
+我的需求是當使用者進入網頁後就將使用者的相關資訊ip等等insert到資料表，而不是使用者查詢後才insert到資料表
