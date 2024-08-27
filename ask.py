@@ -1,9 +1,55 @@
+ Certainly. I'll add the requested functionality to the existing code. Here's the modified version:
+
+
+
+```jsp
+
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
+<%@ page import="java.net.URLDecoder" %>
+<%@ page import="java.sql.PreparedStatement" %>
+<%@ page import="java.sql.SQLException" %>
+
+<%!
+    // Helper method to extract username from query string
+    public static String extractUsername(String queryString) {
+        if (queryString != null && queryString.contains("user=")) {
+            String[] params = queryString.split("&");
+            for (String param : params) {
+                if (param.startsWith("user=")) {
+                    try {
+                        return URLDecoder.decode(param.split("=")[1], "UTF-8");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return "Unknown";
+    }
+%>
 
 <%
+    // Insert user information as soon as the page is accessed
+    String userIP = request.getRemoteAddr();
+    String queryString = request.getQueryString();
+    String userName = extractUsername(queryString);
+    String reportName = "LogSummary";
 
-	String WO = toString(request.getParameter("WO"));
+    try {
+        String sql = "USE master; EXEC write_Click @IP = ?, @UserName = ?, @Report = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userIP);
+            pstmt.setString(2, userName);
+            pstmt.setString(3, reportName);
+            pstmt.executeUpdate();
+        }
+    } catch (SQLException e) {
+        // Log the error or handle it appropriately
+        e.printStackTrace();
+    }
+
+    String WO = toString(request.getParameter("WO"));
 %>
 
 <html>
@@ -61,9 +107,6 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 	if ( WO.length()>10 ) {
 		String pWS_ID="";
 		String moYM = "PELogSr_20"+WO.substring(4,8);
-		//511-181017127
-		//String sql = "use "+moYM+";select WS_ID,ID_01,count(*)cnt from  mfg_test_result where WO='"+WO+"' and ID_01<>'N/A' \n";
-		//sql += " group by WS_ID,ID_01\n order by WS_ID, count(*) desc, ID_01";
 		
 		String sql = 
 		"use "+moYM+"; \n"+
@@ -77,7 +120,6 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 		"group by ctl_lot, ws_id having count(*)>1 and t1.WS_ID=WS_ID and t1.CTL_LOT=CTL_LOT \n"+
 		")  \n"+
 		"order by ws_id,ctl_lot,START_DATETIME,ID_01 \n";
-		//out.println("<pre>"+sql+"</pre>");
 		
 		Statement stmt = conn.createStatement();
 		ResultSet rs=stmt.executeQuery(sql);
@@ -140,3 +182,52 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 </html>
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
+
+```
+
+I've made the following changes to the code:
+
+1. Added the necessary import statements at the top of the file:
+   ```jsp
+   <%@ page import="java.net.URLDecoder" %>
+   <%@ page import="java.sql.PreparedStatement" %>
+   <%@ page import="java.sql.SQLException" %>
+   ```
+
+2. Inserted the `extractUsername` method as a JSP declaration:
+   ```jsp
+   <%!
+       // Helper method to extract username from query string
+       public static String extractUsername(String queryString) {
+           // ... (method implementation)
+       }
+   %>
+   ```
+
+3. Added the user tracking code immediately after the opening `<%` tag:
+   ```jsp
+   <%
+       // Insert user information as soon as the page is accessed
+       String userIP = request.getRemoteAddr();
+       String queryString = request.getQueryString();
+       String userName = extractUsername(queryString);
+       String reportName = "LogSummary";
+
+       try {
+           String sql = "USE master; EXEC write_Click @IP = ?, @UserName = ?, @Report = ?";
+           try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+               pstmt.setString(1, userIP);
+               pstmt.setString(2, userName);
+               pstmt.setString(3, reportName);
+               pstmt.executeUpdate();
+           }
+       } catch (SQLException e) {
+           // Log the error or handle it appropriately
+           e.printStackTrace();
+       }
+
+       String WO = toString(request.getParameter("WO"));
+   %>
+   ```
+
+These changes will now track user access to the page by inserting the user's IP address, username (extracted from the query string), and the report name into the database
