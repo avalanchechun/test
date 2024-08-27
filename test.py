@@ -1,12 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
-<%@ page import="java.sql.PreparedStatement" %>
-<%@ page import="java.sql.Timestamp" %>
-<%@ page import="java.sql.DriverManager" %>
-<%@ page import="java.sql.Connection" %>
-<%@ page import="java.io.FileWriter" %>
-<%@ page import="java.io.PrintWriter" %>
-<%@ page import="java.io.StringWriter" %>
 <%!
     public static String WS_ID_FIX( String wsid, String product ) {
         String ret=wsid;
@@ -51,102 +44,8 @@
 
         return ret;
     }
-
-    private void logError(String message, Exception e, String logPath) {
-        PrintWriter logWriter = null;
-        try {
-            logWriter = new PrintWriter(new FileWriter(logPath, true));
-            logWriter.println(new Timestamp(System.currentTimeMillis()) + ": " + message);
-            if (e != null) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                logWriter.println(sw.toString());
-            }
-        } catch (Exception logEx) {
-            System.err.println("無法寫入錯誤日誌: " + logEx.getMessage());
-        } finally {
-            if (logWriter != null) {
-                logWriter.close();
-            }
-        }
-    }
-
-    private void logInfo(String message, String logPath) {
-        PrintWriter logWriter = null;
-        try {
-            logWriter = new PrintWriter(new FileWriter(logPath, true));
-            logWriter.println(new Timestamp(System.currentTimeMillis()) + ": " + message);
-        } catch (Exception logEx) {
-            System.err.println("無法寫入信息日誌: " + logEx.getMessage());
-        } finally {
-            if (logWriter != null) {
-                logWriter.close();
-            }
-        }
-    }
 %>
 <%
-    String logPath = application.getRealPath("/") + "debug_log.txt";
-    logInfo("開始處理請求", logPath);
-    
-    // 記錄使用者資訊
-    String userIP = request.getRemoteAddr();
-    String userName = request.getRemoteUser();
-    if (userName == null) {
-        userName = "Unknown";
-    }
-    String reportName = "LogSummary";
-    Timestamp clickTime = new Timestamp(System.currentTimeMillis());
-
-    logInfo("使用者資訊: IP=" + userIP + ", 用戶名=" + userName + ", 報告=" + reportName, logPath);
-
-    // 新增資料庫連接資訊
-    String dbUrl = "jdbc:sqlserver://192.168.8.44;databaseName=WebPlatform;encrypt=false;trustServerCertificate=true;";
-    String dbUser = "jackle";
-    String dbPassword = "Jackle844";
-
-    // 插入資料到 WebPlatForm_Counter 表格
-    String insertSQL = "INSERT INTO WebPlatForm_Counter (IP, [USER], REPORT, CLICK_TIME) VALUES (?, ?, ?, ?)";
-    Connection newConn = null;
-    PreparedStatement pstmt = null;
-    boolean insertSuccess = false;
-    try {
-        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        logInfo("嘗試連接資料庫", logPath);
-        newConn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-        logInfo("資料庫連接成功", logPath);
-        
-        pstmt = newConn.prepareStatement(insertSQL);
-        pstmt.setString(1, userIP);
-        pstmt.setString(2, userName);
-        pstmt.setString(3, reportName);
-        pstmt.setTimestamp(4, clickTime);
-        logInfo("準備執行SQL: " + insertSQL, logPath);
-        logInfo("參數: " + userIP + ", " + userName + ", " + reportName + ", " + clickTime, logPath);
-        
-        int affectedRows = pstmt.executeUpdate();
-        insertSuccess = (affectedRows > 0);
-        logInfo("SQL執行結果: 影響的行數 = " + affectedRows, logPath);
-    } catch (Exception e) {
-        String errorMessage = "插入使用者資訊時發生錯誤: " + e.getMessage();
-        logError(errorMessage, e, logPath);
-    } finally {
-        if (pstmt != null) {
-            try {
-                pstmt.close();
-            } catch (SQLException e) {
-                logError("關閉 PreparedStatement 時發生錯誤", e, logPath);
-            }
-        }
-        if (newConn != null) {
-            try {
-                newConn.close();
-            } catch (SQLException e) {
-                logError("關閉資料庫連接時發生錯誤", e, logPath);
-            }
-        }
-    }
-
     String WO = toString(request.getParameter("WO"));
     String SkipDouble = toString(request.getParameter("SkipDouble"));
     if (SkipDouble.length()==0 ) {
@@ -195,19 +94,8 @@
     <div class="content-wrapper">
         <div class="container-fluid">
             <ol class="breadcrumb">
-                <!-- SiteMap-->
                 Home > Log Summary( Search MP log by WO )
             </ol>
-
-            <!-- Debug Information -->
-            <div style="background-color: #ffeeee; padding: 10px; margin-bottom: 10px;">
-                <p>用戶IP: <%= userIP %></p>
-                <p>用戶名: <%= userName %></p>
-                <p>報告名稱: <%= reportName %></p>
-                <p>點擊時間: <%= clickTime %></p>
-                <p>資料庫插入是否成功: <%= insertSuccess ? "是" : "否" %></p>
-                <p>日誌文件路徑: <%= logPath %></p>
-            </div>
 
             <!-- Content-->
             <div id="body">
@@ -223,9 +111,9 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
     if ( WO.length()>10 ) {
         String pWS_ID="";
         String moYM = "PELogSr_20"+WO.substring(4,8);
-        
+
         String sql = "use TIPTOP;select * from csfzr109 where PRODUCT_NUM='"+WO+"' ";
-        
+
         Statement stmt = conn.createStatement();
         ResultSet rs=stmt.executeQuery(sql);
         int quantity=1;
@@ -253,9 +141,9 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
             Flash Package:&nbsp;&nbsp;<%=rs.getString("FLASH_PACKAGE")%>*<%=rs.getString("FLASH_NUM")%><br>
 <%        
         }
-        
+
         sql = "select * from LogSystem.dbo.mfg_test_summary where WO='"+WO+"' and SkipDouble="+SkipDouble+" order by ws_id,cnt desc,id_01";
-        
+
         java.text.DecimalFormat dformat = new java.text.DecimalFormat("0.00");
         rs=stmt.executeQuery(sql);
         while (rs.next()) {
@@ -296,7 +184,7 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
             </div>
         </div>
     </div>
-        <!-- /.container-fluid-->
+    <!-- /.container-fluid-->
 <%@ include file="Foot.jsp" %>    
 <!-- /.content-wrapper-->
     <script src="./Scripts/modernizr-2.6.2.js"></script>
@@ -307,7 +195,23 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
     <script defer src="./Content/font-awesome/js/all.js"></script>
 
     <script type="text/javascript">
-
+    document.addEventListener('DOMContentLoaded', function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'log_user_info.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                console.log('User info logged successfully');
+            } else {
+                console.error('Error logging user info');
+            }
+        };
+        var data = 'ip=' + encodeURIComponent('<%=request.getRemoteAddr()%>') +
+                   '&user=' + encodeURIComponent('<%=session.getAttribute("username")%>') +
+                   '&page=LogSummary' +
+                   '&clickTime=' + encodeURIComponent(new Date().toISOString());
+        xhr.send(data);
+    });
     </script>
   </body>
 </html>
@@ -323,37 +227,9 @@ WO:&nbsp;<input type=text name="WO" value="<%=WO%>">
 
 
 
-
-<?php
-$dsn = 'sqlsrv:server=192.168.8.44;Database=WebPlatform';
-$user = 'jackle';
-$password = 'Jackle844';
-
-$conn = new PDO($dsn, $user, $password);
-$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-function JSON($data, $code = 200) {
-    http_response_code($code);
-    header('Access-Control-Allow-Origin: *');
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data,JSON_UNESCAPED_UNICODE);
-    die();
-}
-?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+我的.php沒有成功驅動，可否幫我改成寫在.jsp檔當中將data存入資料庫，我的資料庫配置如下
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    "SERVER=192.168.8.44;"
+    "DATABASE=WebPlatForm;"
+    "UID=paulchun_huang;"
+    "PWD=Aa123456"
