@@ -1,8 +1,3 @@
- 我理解您需要完整的程式碼。我將為您提供一個完整的、包含所有更改的版本。這個版本將包括所有必要的元素，並整合了用戶記錄功能。
-
-
-
-```jsp
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ include file="./maintain/ext/dbinclude.jsp" %>
 <%@ page import="java.sql.Timestamp" %>
@@ -58,37 +53,6 @@
     String SkipDouble = toString(request.getParameter("SkipDouble"));
     if (SkipDouble.length()==0 ) {
         SkipDouble = "1";
-    }
-
-    // 記錄使用者資訊
-    String userIP = request.getRemoteAddr();
-    String userName = request.getRemoteUser();
-    if (userName == null) {
-        userName = "Unknown";
-    }
-    String reportName = "LogSummary";
-    Timestamp clickTime = new Timestamp(System.currentTimeMillis());
-
-    String insertSQL = "INSERT INTO [192.168.8.44].[WebPlatForm].[dbo].[WebPlatForm_Counter] (IP, [USER], REPORT, CLICK_TIME) VALUES (?, ?, ?, ?)";
-
-    try {
-        if (conn == null || conn.isClosed()) {
-            throw new SQLException("Database connection is not available.");
-        }
-        PreparedStatement pstmt = conn.prepareStatement(insertSQL);
-        pstmt.setString(1, userIP);
-        pstmt.setString(2, userName);
-        pstmt.setString(3, reportName);
-        pstmt.setTimestamp(4, clickTime);
-        int rowsAffected = pstmt.executeUpdate();
-        pstmt.close();
-        if (rowsAffected == 0) {
-            throw new SQLException("Inserting user info failed, no rows affected.");
-        }
-    } catch (Exception e) {
-        out.println("<script>console.error('Error logging user information: " + e.getMessage() + "');</script>");
-        // 可以选择是否在页面上显示错误信息
-        // out.println("<div style='color: red;'>Error logging user information. Please try again later.</div>");
     }
 %>
 
@@ -159,6 +123,17 @@
                     try {
                         stmt = conn.createStatement();
                         rs = stmt.executeQuery(sql);
+                        
+                        
+                        String sql1 = "use master; EXEC write_Click @IP = 'London',@UserName = '11', @Report = 'WA1 1DP'";
+                        Statement stmt1 = null;
+                        ResultSet rs1 = null;
+                        rs1 = stmt1.executeQuery(sql1);
+                        
+                        
+                        
+                        
+                        
                         
                         int quantity=1;
                         String product = "";
@@ -250,25 +225,3 @@
 </html>
 
 <%@ include file="./maintain/ext/dbexit.jsp" %>
-
-```
-
-這個完整的程式碼包含了以下主要更改和功能：
-
-1. 在頁面頂部添加了用戶記錄功能，包括錯誤處理和日誌記錄。
-
-2. 保留了原有的所有功能和結構。
-
-3. 改進了錯誤處理和資源管理，使用 try-catch-finally 塊來確保資源正確關閉。
-
-4. 添加了更多的錯誤檢查和控制台日誌記錄，以幫助診斷潛在問題。
-
-5. 保持了原有的 HTML 結構和樣式。
-
-請確保以下幾點：
-
-1. dbinclude.jsp 文件正確設置並初始化了數據庫連接（conn）。
-2. 目標數據庫 ([192.168.8.44].[WebPlatForm].[dbo].[WebPlatForm_Counter]) 存在並且可訪問。
-3. 執行此 JSP 的用戶具有適當的數據庫權限。
-
-如果您在實施這個版本時仍然遇到問題，請提供具體的錯誤信息或日誌輸出，這將有助於進一步診斷和解決問題。
